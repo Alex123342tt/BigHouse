@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <cstring>
 #include <Windows.h>
 using namespace std;
@@ -25,24 +25,25 @@ public:
             name = new char[len];
             strcpy_s(name, len, other.name);
         }
-        else
-        {
-            name = nullptr;
-        }
+        else name = nullptr;
     }
 
 
+    Person(Person&& other) noexcept : name(other.name), age(other.age)
+    {
+        other.name = nullptr;
+        other.age = 0;
+        cout << "Move constructor Person\n";
+    }
 
     ~Person()
     {
         delete[] name;
     }
 
-
-
     void print() const
     {
-        cout << "²ì'ÿ: " << (name ? name : "Íåâ³äîìî") << ", Â³ê: " << age << endl;
+        cout << "Ð†Ð¼'Ñ: " << (name ? name : "ÐÐµÐ²Ñ–Ð´Ð¾Ð¼Ð¾") << ", Ð’Ñ–Ðº: " << age << endl;
     }
 };
 
@@ -52,54 +53,50 @@ class Apartment
     int size;
 
 public:
-    Apartment(int s = 0) : size(s) 
+    Apartment(int s = 0) : size(s)
     {
         people = (size > 0) ? new Person[size] : nullptr;
     }
 
-    Apartment(const Apartment& other) : size(other.size) 
+    Apartment(const Apartment& other) : size(other.size)
     {
-        if (size > 0) 
+        if (size > 0)
         {
             people = new Person[size];
             for (int i = 0; i < size; i++)
-            {
-                people[i] = other.people[i];
-            }
+                new (&people[i]) Person(other.people[i]);
         }
-        else {
-            people = nullptr;
-        }
+        else people = nullptr;
     }
 
 
+    Apartment(Apartment&& other) noexcept : people(other.people), size(other.size)
+    {
+        other.people = nullptr;
+        other.size = 0;
+        cout << "Move constructor Apartment\n";
+    }
 
     ~Apartment()
     {
         delete[] people;
     }
 
-
-
-    void setPerson(int index, const Person& p) 
+    void setPerson(int index, const Person& p)
     {
         if (index >= 0 && index < size)
-        {
-            people[index] = p;
-        }
+            new (&people[index]) Person(p);
     }
 
     void print() const
     {
-        cout << "Êâàðòèðà (" << size << " ìåøêàíö³â):" << endl;
+        cout << "ÐšÐ²Ð°Ñ€Ñ‚Ð¸Ñ€Ð° (" << size << " Ð¼ÐµÑˆÐºÐ°Ð½Ñ†Ñ–Ð²):" << endl;
         for (int i = 0; i < size; i++)
-        {
             people[i].print();
-        }
     }
 };
 
-class House 
+class House
 {
     Apartment* apartments;
     int count;
@@ -112,42 +109,40 @@ public:
 
     House(const House& other) : count(other.count)
     {
-        if (count > 0) 
+        if (count > 0)
         {
             apartments = new Apartment[count];
             for (int i = 0; i < count; i++)
-            {
-                apartments[i] = other.apartments[i];
-            }
+                new (&apartments[i]) Apartment(other.apartments[i]);
         }
-        else {
-            apartments = nullptr;
-        }
+        else apartments = nullptr;
     }
 
 
+    House(House&& other) noexcept : apartments(other.apartments), count(other.count)
+    {
+        other.apartments = nullptr;
+        other.count = 0;
+        cout << "Move constructor House\n";
+    }
 
     ~House()
     {
         delete[] apartments;
     }
 
-
-
     void setApartment(int index, const Apartment& a)
     {
-        if (index >= 0 && index < count) 
-        {
-            apartments[index] = a;
-        }
+        if (index >= 0 && index < count)
+            new (&apartments[index]) Apartment(a); 
     }
 
     void print() const
     {
-        cout << "Áóäèíîê (" << count << " êâàðòèð):" << endl;
-        for (int i = 0; i < count; i++) 
+        cout << "Ð‘ÑƒÐ´Ð¸Ð½Ð¾Ðº (" << count << " ÐºÐ²Ð°Ñ€Ñ‚Ð¸Ñ€):" << endl;
+        for (int i = 0; i < count; i++)
         {
-            cout << "  Êâàðòèðà ¹" << i + 1 << ":" << endl;
+            cout << "  ÐšÐ²Ð°Ñ€Ñ‚Ð¸Ñ€Ð° â„–" << i + 1 << ":" << endl;
             apartments[i].print();
         }
     }
@@ -158,9 +153,9 @@ int main()
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    Person p1("²âàí Ïåòðîâ", 30);
-    Person p2("Ìàð³ÿ ²âàíîâà", 25);
-    Person p3("Îëåã Ñèäîðîâ", 40);
+    Person p1("Ð†Ð²Ð°Ð½ ÐŸÐµÑ‚Ñ€Ð¾Ð²", 30);
+    Person p2("ÐœÐ°Ñ€Ñ–Ñ Ð†Ð²Ð°Ð½Ð¾Ð²Ð°", 25);
+    Person p3("ÐžÐ»ÐµÐ³ Ð¡Ð¸Ð´Ð¾Ñ€Ð¾Ð²", 40);
 
     Apartment a1(2);
     a1.setPerson(0, p1);
@@ -174,4 +169,9 @@ int main()
     h.setApartment(1, a2);
 
     h.print();
+
+  
+    cout << "\n Ð”ÐµÐ¼Ð¾Ð½ÑÑ‚Ñ€Ð°Ñ†Ñ–Ñ Ð¿ÐµÑ€ÐµÐ¼Ñ–Ñ‰ÐµÐ½Ð½Ñ \n";
+    House movedHouse = std::move(h);
+    movedHouse.print();
 }
